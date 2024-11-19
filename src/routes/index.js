@@ -15,7 +15,7 @@ function AppRoutes(app) {
       )
       .use(routesLoggerMiddleware)
       .use("/auth", authRoutes)
-      .use("/api", new ApiRoutes(this.router).config());
+      .use("/api", new ApiRoutes().config());
 
     this.app.use("/", this.router);
   };

@@ -1,6 +1,6 @@
 const express = require("express");
 
-const BaseRoute = require("@api/base/base_routes");
+const { BaseRoute } = require("@api/base");
 const V1Routes = require("./v1");
 const V2Routes = require("./v2");
 

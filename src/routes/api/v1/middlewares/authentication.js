@@ -1,11 +1,17 @@
-const AuthenticationService = require("@services/authentication_service");
+const { authService, redisService } = require("@services");
 
-const AuthenticationMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     const authToken = req.cookies["auth-token"];
-    const user = AuthenticationService.verifyToken(authToken);
+    const userId = authService.verifyToken(authToken);
+
+    const user = await redisService.get(`userId/${userId}`);
+    if (!user) {
+      throw 401;
+    }
+
     req.user = user;
-    req.employee = user;
+
     next();
   } catch (error) {
     res.status(401).send({
@@ -15,4 +21,4 @@ const AuthenticationMiddleware = (req, res, next) => {
   }
 };
 
-module.exports = AuthenticationMiddleware;
+module.exports = { authMiddleware };

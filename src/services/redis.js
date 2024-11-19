@@ -1,60 +1,74 @@
 const redis = require("redis");
 const { logger } = require("winston");
+const redisEventMappings = require("./redis_event_mappings");
 
-const EIGHT_HOURS_IN_SECONDS = 28800;
-
-function RedisCache() {
+function RedisService() {
   this.cacheClient = redis.createClient({
-    url: 'redis://redis:6379'
+    url: "redis://redis:6379",
   });
-  this.pubSubClient = this.client.duplicate();
+  this.pubSubClient = this.cacheClient.duplicate();
 
-  this.cacheClient.on("error", this.handleError);
+  this.cacheClient.on("error", (error) => {
+    logger.error("Redis Error:", error);
+  });
+
+  const databaseIndex = 0;
+  const keyExpiryEventChannel = `__keyevent@${databaseIndex}__:expired`;
 
   this.connect = async () => {
     await this.cacheClient.connect();
-    await this.cacheClient.configSet('notify-keyspace-events', 'Ex');
+    await this.cacheClient.configSet("notify-keyspace-events", "Ex");
 
     await this.pubSubClient.connect();
+    await this.pubSubClient.subscribe(
+      keyExpiryEventChannel,
+      handleKeyExpiryEvent
+    );
   };
-
-  this.subscribeKeyExpiryEvent = async (callback) => {
-    // Subscribe to expiration events
-    const databaseIndex = 0;
-    const channel = `__keyevent@${databaseIndex}__:expired`;
-
-    await this.pubSubClient.subscribe(channel, callback);
-  }
 
   this.disconnect = async () => {
     await this.cacheClient.disconnect();
+
+    await this.pubSubClient.unsubscribe(keyExpiryEventChannel);
+    await this.pubSubClient.disconnect();
   };
 
-  this.handleError = (error) => {
-    logger.error("Redis Error:", error);
+  this.get = async (cacheKey) => {
+    const data = await this.cacheClient.get(cacheKey);
+    return data && JSON.parse(data);
   };
 
-  this.cache = async (
-    cacheKey,
-    callback,
-    expiryTime = EIGHT_HOURS_IN_SECONDS
-  ) => {
+  this.set = (cacheKey, data, expiryTime) =>
+    this.cacheClient.set(cacheKey, JSON.stringify(data), {
+      EX: expiryTime,
+      NX: true,
+    });
+
+  this.del = (cacheKey) => this.cacheClient.del(cacheKey);
+
+  this.cache = async (cacheKey, callback, expiryTime) => {
     if (!this.cacheClient) {
       logger.error("Redis not connected");
       return await callback();
     }
 
-    let data = await this.cacheClient.get(cacheKey);
-    if (data) return JSON.parse(data);
+    let data = await this.get(cacheKey);
+    if (data) return data;
 
     data = await callback();
-    await this.cacheClient.set(cacheKey, JSON.stringify(data), {
-      EX: expiryTime, // seconds
-      NX: true,
-    });
+    await this.set(cacheKey, data, expiryTime);
 
     return data;
   };
+
+  const handleKeyExpiryEvent = (key) => {
+    const eventName = Object.keys(redisEventMappings).find((eventName) =>
+      key.match(eventName)
+    );
+
+    const eventHandler = redisEventMappings[eventName || "default"];
+    return eventHandler && eventHandler(key);
+  };
 }
 
-module.exports = { redisCache: new RedisCache() };
+module.exports = { redisService: new RedisService() };

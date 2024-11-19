@@ -9,7 +9,7 @@ const {
   AUTH_TOKEN_EXPIRES_IN_MINUTES,
 } = process.env;
 
-function AuthenticationService() {
+function AuthService() {
   this.signToken = (payload) => {
     const nonce = crypto.randomBytes(16).toString("base64");
     const expires = moment().add(
@@ -59,4 +59,4 @@ function AuthenticationService() {
   };
 }
 
-module.exports = new AuthenticationService();
+module.exports = { authService: new AuthService() };
