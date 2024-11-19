@@ -1,8 +1,14 @@
 const JWT = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
+const { logger } = require("winston");
 const BaseService = require("./base_service");
-const { redisCache } = require("./redis");
+const { appEvents } = require("./events");
+const { redisService } = require("./redis");
 const { KotakNeoApiError } = require("@error_handlers");
+const {
+  KOTAK_NEO_ACCESS_TOKEN,
+  KOTAK_NEO_ACCESS_TOKEN_EXPIRED,
+} = require("@config/constants");
 
 const {
   KOTAK_NEO_CONSUMER_KEY,
@@ -13,110 +19,104 @@ const {
   KOTAK_NEO_GW_NAPI_URL,
 } = process.env;
 
-const EIGHT_HOURS_IN_SECONDS = 28800;
+const A_DAY_IN_SECONDS = 86400;
 
-function KotakNeo(mobileNumber, password) {
+function KotakNeoService() {
   BaseService.call(this);
 
   this.baseUrl = KOTAK_NEO_GW_NAPI_URL;
-  this.mobileNumber = mobileNumber;
-  this.password = password;
 
   this.errorHandler = (error, details = {}) => {
     throw new KotakNeoApiError(error.message, error.status, details);
   };
 
-  this.accessToken = redisCache.cache(
-    "access_token",
-    async () => {
-      const consumerAuthToken = CryptoJS.enc.Base64.stringify(
-        `${KOTAK_NEO_CONSUMER_KEY}:${KOTAK_NEO_CONSUMER_SECRET}`
+  this.generateAccessToken = async () => {
+    try {
+      this.accessToken = await redisService.cache(
+        KOTAK_NEO_ACCESS_TOKEN,
+        async () => {
+          const consumerAuthToken = CryptoJS.enc.Base64.stringify(
+            CryptoJS.enc.Utf8.parse(
+              `${KOTAK_NEO_CONSUMER_KEY}:${KOTAK_NEO_CONSUMER_SECRET}`
+            )
+          );
+
+          const body = {
+            grant_type: "password",
+            username: KOTAK_NEO_USERNAME,
+            password: KOTAK_NEO_PASSWORD,
+          };
+
+          const response = await this.callApi("POST", "/oauth2/token", body, {
+            headers: { Authorization: `Basic ${consumerAuthToken}` },
+            baseUrl: KOTAK_NEO_NAPI_URL,
+          });
+
+          return response.access_token;
+        },
+        A_DAY_IN_SECONDS
       );
 
-      const body = {
-        grant_type: "password",
-        username: KOTAK_NEO_USERNAME,
-        password: KOTAK_NEO_PASSWORD,
-      };
+      this.defaultHeaders = { Authorization: `Bearer ${this.accessToken}` };
+    } catch (error) {
+      logger.error(error);
+      setTimeout(() => appEvents.emit(KOTAK_NEO_ACCESS_TOKEN_EXPIRED), 3000);
+    }
+  };
 
-      const response = await this.callApi("POST", "/oauth2/token", body, {
-        ...authHeader("Basic", consumerAuthToken),
-        baseUrl: KOTAK_NEO_NAPI_URL,
-      });
+  appEvents.on(KOTAK_NEO_ACCESS_TOKEN_EXPIRED, this.generateAccessToken);
 
-      return response.access_token;
-    },
-    EIGHT_HOURS_IN_SECONDS
-  );
+  this.generateViewToken = async (mobileNumber, password) => {
+    const body = { mobileNumber, password };
 
-  // this.generateAccessToken = async () => {
-  //   const consumerAuthToken = CryptoJS.enc.Base64.stringify(
-  //     `${KOTAK_NEO_CONSUMER_KEY}:${KOTAK_NEO_CONSUMER_SECRET}`
-  //   );
+    const { data } = await this.callApi(
+      "POST",
+      "/login/1.0/login/v2/validate",
+      body
+    );
 
-  //   const body = {
-  //     grant_type: "password",
-  //     username: KOTAK_NEO_USERNAME,
-  //     password: KOTAK_NEO_PASSWORD,
-  //   };
+    const { sid, token } = data || {};
+    return { sid, viewToken: token };
+  };
 
-  //   const response = await this.callApi("POST", "/oauth2/token", body, {
-  //     ...authHeader("Basic", consumerAuthToken),
-  //     baseUrl: KOTAK_NEO_NAPI_URL,
-  //   });
+  this.generateOtp = (token) => {
+    const userId = getUserId(token);
 
-  //   return response.access_token;
-  // };
+    this.callApi("POST", "/login/1.0/login/otp/generate", {
+      userId,
+      sendEmail: false,
+      isWhitelisted: true,
+    });
 
-  // this.generateAccessToken().then((accessToken) => {
-  //   this.accessToken = accessToken;
-  // });
+    return userId;
+  };
 
-  this.generateViewToken = async (accessToken) => {
-    const body = {
-      mobileNumber: this.mobileNumber,
-      password: this.password,
+  this.getSessionToken = async (sid, viewToken, otp) => {
+    const userId = getUserId(viewToken);
+
+    const body = { userId, otp };
+    const options = {
+      headers: {
+        sid,
+        Auth: viewToken,
+      },
     };
 
     const { data } = await this.callApi(
       "POST",
       "/login/1.0/login/v2/validate",
       body,
-      authHeader("Bearer", accessToken)
+      options
     );
 
-    return data && data.token;
+    const { token, hsServerId } = data || {};
+    return { sessionToken: token, serverId: hsServerId, userId };
   };
 
-  this.generateOtp = (token) => {
-    this.callApi("POST", "/login/1.0/login/otp/generate", {
-      userId: getUserId(token),
-      sendEmail: false,
-      isWhitelisted: true,
-    });
-  };
-
-  this.getSessionToken = (sid, viewToken, accessToken, userId, otp) => {
-    const body = { userId, otp };
-    const options = {
-      headers: {
-        sid,
-        Auth: viewToken,
-        Authorization: accessToken,
-      },
-    };
-
-    this.callApi("POST", "/login/1.0/login/v2/validate", body, options);
-  };
-
-  const getUserId = (accessToken) => {
-    const data = JWT.verify(accessToken);
+  const getUserId = (viewToken) => {
+    const data = JWT.decode(viewToken);
     return data.sub;
   };
-
-  const authHeader = (type, token) => ({
-    headers: { Authorization: `${type} ${token}` },
-  });
 }
 
-module.exports = KotakNeo;
+module.exports = { kotakNeoService: new KotakNeoService() };

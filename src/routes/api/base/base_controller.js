@@ -1,10 +1,13 @@
 const { logger } = require("winston");
 
+const AN_HOUR_IN_SECONDS = 600;
+
 function BaseController(req, res, next) {
   this.headers = req.headers;
   this.body = req.body;
   this.params = req.params;
   this.query = req.query;
+  this.cookies = req.cookies;
 
   this.req = req;
   this.res = res;
@@ -33,7 +36,6 @@ function BaseController(req, res, next) {
     });
 
   this.errorHandler = (error) => {
-    // console.log("ERROR", Object.getOwnPropertyDescriptors(error));
     const { status = 500, message, ...others } = error;
 
     this.res.status(status).send({
@@ -45,15 +47,22 @@ function BaseController(req, res, next) {
       logger.error(error);
     }
   };
+
+  this.setCookies = (cookies, expiryTime = AN_HOUR_IN_SECONDS) => {
+    const maxAge = 1000 * expiryTime;
+    const cookiesOptions = { maxAge, httpOnly: true };
+
+    Object.entries(cookies).forEach(([key, value]) =>
+      this.res.cookie(key, value, cookiesOptions)
+    );
+  };
+
+  this.clearCookies = (keys) => {
+    if (!Array.isArray(keys)) {
+      keys = [keys];
+    }
+    keys.forEach((key) => this.res.clearCookie(key));
+  };
 }
 
-const exportActions = (klass) => {
-  klass.action =
-    (action) =>
-    (...args) =>
-      new klass(...args)[action]();
-
-  return klass;
-};
-
-module.exports = { BaseController, exportActions };
+module.exports = BaseController;
