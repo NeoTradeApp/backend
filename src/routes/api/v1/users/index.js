@@ -1,12 +1,12 @@
-const express = require('express');
-const AuthenticationMiddleware = require("@api/v1/middlewares/authentication")
-const BaseRoute = require("@api/base/base_routes");
+const express = require("express");
+const { authMiddleware } = require("@api/v1/middlewares");
+const { BaseRoute } = require("@api/base");
 const UsersController = require("./users_controller");
 
 function UsersRoutes() {
   BaseRoute.call(this, express.Router());
 
-  this.useMiddleware = AuthenticationMiddleware;
+  this.useMiddleware = authMiddleware;
 
   const parentConfig = this.config;
   this.config = () => {

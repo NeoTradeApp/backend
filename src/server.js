@@ -3,9 +3,9 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { logger } = require("winston");
+const { redisService, kotakNeoService } = require("@services");
 
 const Database = require("@database");
-const { redisCache } = require("@services/redis");
 const { PORT = 4000, FRONTEND_HOST_URL } = process.env;
 
 function Server() {
@@ -14,7 +14,6 @@ function Server() {
 
   this.start = async () => {
     await database.connect();
-    await redisCache.connect();
     await this.config();
 
     this.server = this.app.listen(PORT, (error) => {
@@ -28,15 +27,9 @@ function Server() {
 
   this.stop = async () => {
     database.disconnect();
-    await redisCache.disconnect();
+    await redisService.disconnect();
     return this.server && this.server.close();
   };
-
-  const configAppRoutes = () => {
-    const AppRoutes = require("@routes");
-    const appRoutes = new AppRoutes(this.app);
-    appRoutes.config();
-  }
 
   this.config = async () => {
     this.app.use(cookieParser());
@@ -44,7 +37,23 @@ function Server() {
     this.app.use(bodyParser.json());
     this.app.use(cors({ origin: FRONTEND_HOST_URL, credentials: true }));
 
+    await configRedis();
+    await configKotakNeo();
     configAppRoutes();
+  };
+
+  const configAppRoutes = () => {
+    const AppRoutes = require("@routes");
+    const appRoutes = new AppRoutes(this.app);
+    appRoutes.config();
+  };
+
+  const configRedis = async () => {
+    await redisService.connect();
+  };
+
+  const configKotakNeo = async () => {
+    await kotakNeoService.generateAccessToken();
   };
 }
 

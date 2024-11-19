@@ -16,6 +16,7 @@ const handleUncaughtException = () => {
     process.on(event, (error) => {
       logger.error(`Gracefully shutting down the server. [${event}]`, error);
       server.stop();
+      process.exit(1);
     }));
 };
 
