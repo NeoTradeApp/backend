@@ -1,5 +1,10 @@
 const { BaseController, exportActions } = require("@api/base");
-const { kotakNeoService, authService, redisService } = require("@services");
+const {
+  kotakNeoService,
+  authService,
+  redisService,
+  HSWebSocketService,
+} = require("@services");
 const { ApplicationError } = require("@error_handlers");
 
 const { AUTH_TOKEN_EXPIRES_IN_MINUTES } = process.env;
@@ -56,6 +61,8 @@ function AuthController(...args) {
     const authToken = authService.signToken(userId);
     this.clearCookies(["view-token", "sid"]);
     this.setCookies({ "auth-token": authToken }, AUTH_TOKEN_EXPIRES_IN_MINUTES);
+
+    new HSWebSocketService(sessionToken, sid).connect();
 
     this.sendResponse("Logged in successfully.");
   });

@@ -19,6 +19,7 @@
     "@api": "src/routes/api",
     "@models": "src/models",
     "@services": "src/services",
+    "@libs": "src/libs",
     "@error_handlers": "src/error_handlers",
     "@database": "src/database",
     "@utils": "src/utils"
@@ -35,13 +36,15 @@
     "module-alias": "^2.2.3",
     "moment": "^2.29.4",
     "nodemon": "^3.1.7",
+    "pako": "^2.1.0",
     "passport": "^0.6.0",
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.13.0",
     "redis": "^4.7.0",
     "sequelize": "^6.28.0",
     "swagger-ui-express": "4.1.6",
-    "winston": "^3.8.2"
+    "winston": "^3.8.2",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "eslint": "^8.27.0",
