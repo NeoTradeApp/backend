@@ -2,13 +2,10 @@ const JWT = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
 const { logger } = require("winston");
 const BaseService = require("./base_service");
-const { appEvents } = require("./events");
+const { appEvents } = require("@events");
 const { redisService } = require("./redis");
 const { KotakNeoApiError } = require("@error_handlers");
-const {
-  KOTAK_NEO_ACCESS_TOKEN,
-  KOTAK_NEO_ACCESS_TOKEN_EXPIRED,
-} = require("@config/constants");
+const { REDIS, EVENT } = require("@constants");
 
 const {
   KOTAK_NEO_CONSUMER_KEY,
@@ -33,7 +30,7 @@ function KotakNeoService() {
   this.generateAccessToken = async () => {
     try {
       this.accessToken = await redisService.cache(
-        KOTAK_NEO_ACCESS_TOKEN,
+        REDIS.KOTAK_NEO.ACCESS_TOKEN,
         async () => {
           const consumerAuthToken = CryptoJS.enc.Base64.stringify(
             CryptoJS.enc.Utf8.parse(
@@ -60,11 +57,14 @@ function KotakNeoService() {
       this.defaultHeaders = { Authorization: `Bearer ${this.accessToken}` };
     } catch (error) {
       logger.error(error);
-      setTimeout(() => appEvents.emit(KOTAK_NEO_ACCESS_TOKEN_EXPIRED), 3000);
+      setTimeout(
+        () => appEvents.emit(EVENT.KOTAK_NEO.ACCESS_TOKEN_EXPIRED),
+        3000
+      );
     }
   };
 
-  appEvents.on(KOTAK_NEO_ACCESS_TOKEN_EXPIRED, this.generateAccessToken);
+  appEvents.on(EVENT.KOTAK_NEO.ACCESS_TOKEN_EXPIRED, this.generateAccessToken);
 
   this.generateViewToken = async (mobileNumber, password) => {
     const body = { mobileNumber, password };

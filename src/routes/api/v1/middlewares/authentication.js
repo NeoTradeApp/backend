@@ -5,11 +5,12 @@ const authMiddleware = async (req, res, next) => {
     const authToken = req.cookies["auth-token"];
     const userId = authService.verifyToken(authToken);
 
-    const user = await redisService.get(`userId/${userId}`);
+    let user = await redisService.get(`userId/${userId}`);
     if (!user) {
       throw 401;
     }
 
+    user.userId = userId;
     req.user = user;
 
     next();

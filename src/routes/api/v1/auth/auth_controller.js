@@ -48,6 +48,7 @@ function AuthController(...args) {
     const { sessionToken, serverId, userId } =
       await kotakNeoService.getSessionToken(sid, viewToken, otp);
 
+    const expiryTimeInSeconds = AUTH_TOKEN_EXPIRES_IN_MINUTES * 60;
     redisService.set(
       `userId/${userId}`,
       {
@@ -55,12 +56,12 @@ function AuthController(...args) {
         serverId,
         sid,
       },
-      AUTH_TOKEN_EXPIRES_IN_MINUTES
+      expiryTimeInSeconds
     );
 
     const authToken = authService.signToken(userId);
     this.clearCookies(["view-token", "sid"]);
-    this.setCookies({ "auth-token": authToken }, AUTH_TOKEN_EXPIRES_IN_MINUTES);
+    this.setCookies({ "auth-token": authToken }, expiryTimeInSeconds);
 
     new HSWebSocketService(sessionToken, sid).connect();
 

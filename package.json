@@ -15,10 +15,12 @@
   "_moduleAliases": {
     "@root": ".",
     "@config": "src/config",
+    "@constants": "src/config/constants",
     "@routes": "src/routes",
     "@api": "src/routes/api",
     "@models": "src/models",
     "@services": "src/services",
+    "@events": "src/events",
     "@libs": "src/libs",
     "@error_handlers": "src/error_handlers",
     "@database": "src/database",

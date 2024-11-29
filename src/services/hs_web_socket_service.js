@@ -1,7 +1,7 @@
 const { logger } = require("winston");
 const { HSWebSocket } = require("@libs");
-const { socketEvents } = require("./events");
-const { HS_WEB_SOCKET_MESSAGE, SCRIPS } = require("@config/constants");
+const { appEvents } = require("@events");
+const { EVENT, SCRIPS } = require("@constants");
 
 function HSWebSocketService(token, sid, chNo) {
   const url = "wss://mlhsm.kotaksecurities.com";
@@ -34,11 +34,14 @@ function HSWebSocketService(token, sid, chNo) {
       logger.error("HSWeb Error:", error);
     };
 
-    this.userWS.onmessage = (msg) => {
-      const result = JSON.parse(msg);
-      logger.socket("HSWeb Message:", result);
+    this.userWS.onmessage = (rawData) => {
+      const data = JSON.parse(rawData);
+      logger.socket("HSWeb Message:", data);
 
-      socketEvents.emit(HS_WEB_SOCKET_MESSAGE, result);
+      const [{ e: exchange }] = data || [{}]
+      if (exchange === "nse_cm") {
+        appEvents.emit(EVENT.HS_WEB_SOCKET.MARKET_FEED, data);
+      }
     };
 
     return this.userWS;

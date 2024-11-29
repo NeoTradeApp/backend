@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { logger } = require("winston");
-const { redisService, kotakNeoService } = require("@services");
+const { redisService, kotakNeoService, socketService } = require("@services");
 
 const Database = require("@database");
 const { PORT = 4000, FRONTEND_HOST_URL } = process.env;
@@ -19,9 +19,11 @@ function Server() {
     this.server = this.app.listen(PORT, (error) => {
       if (error) {
         logger.error("Error in starting the server", error);
-      } else {
-        logger.info("Listening on port:", PORT);
+        return;
       }
+
+      socketService.start(this.server);
+      logger.info("Listening on port:", PORT);
     });
   };
 

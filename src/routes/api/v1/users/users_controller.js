@@ -1,20 +1,23 @@
 const { BaseController, exportActions } = require("@api/base");
+const { appEvents } = require("@events");
+const { EVENT, WEB_SOCKET } = require("@constants");
 const { selectKeys } = require("@utils");
-const { HSWebSocketService } = require("@services");
 
 function UsersController(...args) {
   BaseController.call(this, ...args);
 
   this.profile = this.withTryCatch(async () => {
-    const { sessionToken, sid } = this.user;
+    const { userId } = this.user;
+    const profile = selectKeys(this.user, "serverId", "sid", "userId");
 
-    new HSWebSocketService(sessionToken, sid).connect();
-
-    return this.sendResponse(
-      "Employee profile details",
-      // selectKeys(this.user, "serverId", "sid")
-      this.user
+    appEvents.emit(
+      EVENT.APP.USER_SESSION_EXPIRED,
+      userId,
+      WEB_SOCKET.MESSAGE_TYPE.USER_SESSION_EXPIRED,
+      profile
     );
+
+    return this.sendResponse("Employee profile details", profile);
   });
 }
 

@@ -1,7 +1,7 @@
 const { logger } = require("winston");
 const { HSIWebSocket } = require("@libs");
-const { HSI_WEB_SOCKET_MESSAGE } = require("@config/constants");
-const { socketEvents } = require("./events");
+const { EVENT } = require("@constants");
+const { appEvents } = require("@events");
 
 function HSIWebSocketService(token, sid, serverId, chNo) {
   const url = `wss://mlhsi.kotaksecurities.com/realtime?sId=${serverId}`;
@@ -38,7 +38,7 @@ function HSIWebSocketService(token, sid, serverId, chNo) {
       const result = JSON.parse(msg);
       logger.socket("HSIWeb Socket Message:", result);
 
-      socketEvents.emit(HSI_WEB_SOCKET_MESSAGE, result);
+      appEvents.emit(EVENT.HSI_WEB_SOCKET.MESSAGE, result);
     };
   };
 }
