@@ -3,7 +3,7 @@ const {
   kotakNeoService,
   authService,
   redisService,
-  HSWebSocketService,
+  hsWebSocketService,
 } = require("@services");
 const { ApplicationError } = require("@error_handlers");
 
@@ -63,7 +63,7 @@ function AuthController(...args) {
     this.clearCookies(["view-token", "sid"]);
     this.setCookies({ "auth-token": authToken }, expiryTimeInSeconds);
 
-    new HSWebSocketService(sessionToken, sid).connect();
+    hsWebSocketService.connect(sessionToken, sid);
 
     this.sendResponse("Logged in successfully.");
   });

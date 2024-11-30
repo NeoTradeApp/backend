@@ -3,22 +3,31 @@ const { HSWebSocket } = require("@libs");
 const { appEvents } = require("@events");
 const { EVENT, SCRIPS } = require("@constants");
 
-function HSWebSocketService(token, sid, chNo) {
+function HSWebSocketService() {
   const url = "wss://mlhsm.kotaksecurities.com";
 
-  this.channelNumber = chNo || 1;
-  this.token = token;
-  this.sid = sid;
+  this.channelNumber = 1;
+  // this.token = token;
+  // this.sid = sid;
 
   this.send = (obj) => this.userWS && this.userWS.send(JSON.stringify(obj));
 
-  this.connect = () => {
+  this.connect = (token, sid) => {
+    /*
+     * TODO: remove this condition.
+     * Used as one socket connection for market feed from HS Web socket,
+     * instead of adding separate socket for each user login.
+     */
+    if (this.isOpen()) {
+      return;
+    }
+
     this.userWS = new HSWebSocket(url);
 
     this.userWS.onopen = () => {
       this.send({
-        Authorization: this.token,
-        Sid: this.sid,
+        Authorization: token,
+        Sid: sid,
         type: "cn",
       });
 
@@ -38,7 +47,7 @@ function HSWebSocketService(token, sid, chNo) {
       const data = JSON.parse(rawData);
       logger.socket("HSWeb Message:", data);
 
-      const [{ e: exchange }] = data || [{}]
+      const [{ e: exchange }] = data || [{}];
       if (exchange === "nse_cm") {
         appEvents.emit(EVENT.HS_WEB_SOCKET.MARKET_FEED, data);
       }
@@ -46,6 +55,8 @@ function HSWebSocketService(token, sid, chNo) {
 
     return this.userWS;
   };
+
+  this.isOpen = () => this.userWS && this.userWS.OPEN && this.userWS.readyState;
 
   const subscribe = (type, scrips) =>
     this.send({
@@ -65,4 +76,4 @@ function HSWebSocketService(token, sid, chNo) {
   this.resume = () => pauseOrResume("cr");
 }
 
-module.exports = HSWebSocketService;
+module.exports = { hsWebSocketService: new HSWebSocketService() };

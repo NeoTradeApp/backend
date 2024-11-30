@@ -2,7 +2,7 @@ const { authService } = require("./authentication");
 const { kotakNeoService } = require("./kotak_neo");
 const { redisService } = require("./redis");
 const { socketService } = require("./socket_service");
-const HSWebSocketService = require("./hs_web_socket_service");
+const { hsWebSocketService } = require("./hs_web_socket_service");
 const HSIWebSocketService = require("./hs_web_socket_service");
 
 module.exports = {
@@ -10,6 +10,6 @@ module.exports = {
   kotakNeoService,
   redisService,
   socketService,
-  HSWebSocketService,
+  hsWebSocketService,
   HSIWebSocketService,
 };

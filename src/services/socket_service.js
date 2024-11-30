@@ -35,21 +35,6 @@ function SocketService() {
         });
       });
     });
-
-    // server.on("upgrade", (req, socket, head) => {
-    //   socket.on("error", this.errorHandler);
-    //   authenticateUser(req, (error, client) => {
-    //     if (error) {
-    //       socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
-    //       socket.destroy();
-    //       return;
-    //     }
-    //     socket.removeListener("error", this.errorHandler);
-    //     this.socketServer.handleUpgrade(req, socket, head, (ws) => {
-    //       this.socketServer.emit("connection", ws, req, client);
-    //     });
-    //   });
-    // });
   };
 
   const authenticateUser = (req, callback) => {
