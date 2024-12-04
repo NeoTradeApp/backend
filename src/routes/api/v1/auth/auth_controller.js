@@ -6,6 +6,7 @@ const {
   hsWebSocketService,
 } = require("@services");
 const { ApplicationError } = require("@error_handlers");
+const { validateLoginParams } = require("./validations");
 
 const { AUTH_TOKEN_EXPIRES_IN_MINUTES } = process.env;
 const TEN_MINUTES_IN_SECONDS = 600;
@@ -15,12 +16,7 @@ function AuthController(...args) {
 
   this.login = this.withTryCatch(async () => {
     const { mobileNumber, password } = this.body;
-    if (!mobileNumber || !password) {
-      throw new ApplicationError(
-        "Missing parameters mobileNumber or password",
-        400
-      );
-    }
+    validateLoginParams({ mobileNumber, password });
 
     const { sid, viewToken } = await kotakNeoService.generateViewToken(
       mobileNumber,
@@ -32,6 +28,23 @@ function AuthController(...args) {
     this.setCookies({ "view-token": viewToken, sid }, TEN_MINUTES_IN_SECONDS);
 
     this.sendResponse("OTP sent to the mobile number.");
+  });
+
+  this.validateOtpSession = this.withTryCatch(async () => {
+    const { "view-token": viewToken } = this.cookies;
+    if (!viewToken) {
+      throw new ApplicationError("Invalid OTP session", 401);
+    }
+
+    kotakNeoService.getUserId(viewToken);
+    this.sendResponse("Valid OTP session");
+  });
+
+  this.resendOtp = this.withTryCatch(async () => {
+    const { "view-token": viewToken } = this.cookies;
+    await kotakNeoService.generateOtp(viewToken);
+
+    this.sendResponse("OTP resent to the mobile number.");
   });
 
   this.validateOtp = this.withTryCatch(async () => {

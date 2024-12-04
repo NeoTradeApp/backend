@@ -24,7 +24,11 @@ function KotakNeoService() {
   this.baseUrl = KOTAK_NEO_GW_NAPI_URL;
 
   this.errorHandler = (error, details = {}) => {
-    throw new KotakNeoApiError(error.message, error.status, details);
+    const { status, data: { error: errorDetails } = {} } = error.response || {};
+    const errorMessage =
+      errorDetails && errorDetails.map((e) => e.message).join(". ");
+
+    throw new KotakNeoApiError(errorMessage || error.message, status, details);
   };
 
   this.generateAccessToken = async () => {
@@ -80,7 +84,7 @@ function KotakNeoService() {
   };
 
   this.generateOtp = (token) => {
-    const userId = getUserId(token);
+    const userId = this.getUserId(token);
 
     this.callApi("POST", "/login/1.0/login/otp/generate", {
       userId,
@@ -92,7 +96,7 @@ function KotakNeoService() {
   };
 
   this.getSessionToken = async (sid, viewToken, otp) => {
-    const userId = getUserId(viewToken);
+    const userId = this.getUserId(viewToken);
 
     const body = { userId, otp };
     const options = {
@@ -113,9 +117,13 @@ function KotakNeoService() {
     return { sessionToken: token, serverId: hsServerId, userId };
   };
 
-  const getUserId = (viewToken) => {
-    const data = JWT.decode(viewToken);
-    return data.sub;
+  this.getUserId = (viewToken) => {
+    try {
+      const data = JWT.decode(viewToken);
+      return data.sub;
+    } catch (error) {
+      throw new KotakNeoApiError("Invalid view token", 401);
+    }
   };
 }
 

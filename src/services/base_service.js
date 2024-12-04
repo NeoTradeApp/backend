@@ -23,7 +23,7 @@ function BaseService() {
       const response = await axios(config);
       return response.data;
     } catch (error) {
-      this.errorHandler(error,{ method, path });
+      this.errorHandler(error, { method, path });
     }
   };
 }
