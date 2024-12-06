@@ -45,7 +45,7 @@ function HSWebSocketService() {
 
     this.userWS.onmessage = (rawData) => {
       const data = JSON.parse(rawData);
-      logger.socket("HSWeb Message:", data);
+      // logger.socket("HSWeb Message Received");
 
       const [{ e: exchange }] = data || [{}];
       if (exchange === "nse_cm") {

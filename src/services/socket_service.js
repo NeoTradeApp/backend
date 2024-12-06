@@ -26,6 +26,7 @@ function SocketService() {
         const { userId } = client;
         ws.isAlive = true;
         this.clients.set(userId, ws);
+        logger.socket("Client connected", userId);
 
         ws.on("message", async (rawData) => {
           const { type, data } = JSON.parse(rawData);
@@ -45,7 +46,7 @@ function SocketService() {
       this.healthCheck && clearInterval(this.healthCheck);
     });
 
-    this.healthCheck = setInterval(function ping() {
+    this.healthCheck = setInterval(() => {
       this.socketServer &&
         this.clients.forEach((ws) => {
           if (ws.isAlive === false) {
@@ -60,7 +61,8 @@ function SocketService() {
 
   const authenticateUser = (req, callback) => {
     try {
-      const authToken = req.headers["auth-token"];
+      const cookie = req.headers.cookie || "";
+      const [, authToken] = cookie.match(/auth-token=([^;]+)/) || [];
       const userId = authService.verifyToken(authToken);
 
       callback(null, { userId });
