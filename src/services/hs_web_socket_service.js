@@ -10,7 +10,7 @@ function HSWebSocketService() {
   // this.token = token;
   // this.sid = sid;
 
-  this.send = (obj) => this.userWS && this.userWS.send(JSON.stringify(obj));
+  this.send = (obj) => this.isOpen() && this.userWS.send(JSON.stringify(obj));
 
   this.connect = (token, sid) => {
     /*
@@ -18,7 +18,7 @@ function HSWebSocketService() {
      * Used as one socket connection for market feed from HS Web socket,
      * instead of adding separate socket for each user login.
      */
-    if (this.isOpen()) {
+    if (this.userWS || this.isOpen()) {
       return;
     }
 
