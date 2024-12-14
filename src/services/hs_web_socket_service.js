@@ -36,6 +36,7 @@ function HSWebSocketService() {
     };
 
     this.userWS.onclose = () => {
+      this.userWS = null;
       logger.socket("HSWeb: disconnected");
     };
 

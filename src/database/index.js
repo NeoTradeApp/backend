@@ -1,6 +1,6 @@
 const { Sequelize, QueryTypes } = require("sequelize");
 const { logger } = require("winston");
-const { schema } = require("@database/schemas");
+const { Model } = require("@models");
 
 const { DATABASE_HOST, DATABASE_USERNAME, DATABASE_PASSWORD, DATABASE_NAME } =
   process.env;
@@ -30,11 +30,10 @@ function Database() {
 
   this.connect = async () => {
     try {
+      this.configModels();
+
       await this.connection.authenticate();
       logger.info("Connected to the database");
-
-      schema.config(this.connection);
-      await this.sync();
 
       return this.connection;
     } catch (error) {
@@ -48,17 +47,17 @@ function Database() {
     return this.connection && this.connection.close();
   };
 
+  this.configModels = () => {
+    const models = new Model(this.connection, Sequelize);
+    models.config();
+  };
+
   this.executeQuery = async (rawQuery) => {
     if (this.connection) {
       return await this.connection.query(rawQuery, { type: QueryTypes.SELECT });
     }
 
-    logget.warning("Database is not connected");
-  };
-
-  this.sync = async () => {
-    await this.connection.sync();
-    logger.info("Database tables synced successfully!");
+    logger.warning("Database is not connected");
   };
 }
 
