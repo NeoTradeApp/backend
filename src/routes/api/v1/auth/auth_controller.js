@@ -1,15 +1,12 @@
 const { BaseController, exportActions } = require("@api/base");
-const {
-  kotakNeoService,
-  authService,
-  redisService,
-  hsWebSocketService,
-} = require("@services");
+const { kotakNeoService, authService, redisService } = require("@services");
 const { ApplicationError } = require("@error_handlers");
 const { validateLoginParams } = require("./validations");
+const { REDIS } = require("@constants");
 
 const { AUTH_TOKEN_EXPIRES_IN_MINUTES } = process.env;
 const TEN_MINUTES_IN_SECONDS = 600;
+const A_DAY_IN_SECONDS = 86400;
 
 function AuthController(...args) {
   BaseController.call(this, ...args);
@@ -72,11 +69,18 @@ function AuthController(...args) {
       expiryTimeInSeconds
     );
 
+    redisService.cache(
+      REDIS.HS_WEB_SOCKET.CREDENTIALS,
+      () => ({
+        token: sessionToken,
+        sid,
+      }),
+      A_DAY_IN_SECONDS
+    );
+
     const authToken = authService.signToken(userId);
     this.clearCookies(["view-token", "sid"]);
     this.setCookies({ "auth-token": authToken }, expiryTimeInSeconds);
-
-    hsWebSocketService.connect(sessionToken, sid);
 
     this.sendResponse("Logged in successfully.");
   });

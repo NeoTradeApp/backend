@@ -1,22 +1,10 @@
 const JWT = require("jsonwebtoken");
-const CryptoJS = require("crypto-js");
-const { logger } = require("winston");
 const BaseService = require("./base_service");
-const { appEvents } = require("@events");
 const { redisService } = require("./redis");
 const { KotakNeoApiError } = require("@error_handlers");
-const { REDIS, EVENT } = require("@constants");
+const { REDIS } = require("@constants");
 
-const {
-  KOTAK_NEO_CONSUMER_KEY,
-  KOTAK_NEO_CONSUMER_SECRET,
-  KOTAK_NEO_USERNAME,
-  KOTAK_NEO_PASSWORD,
-  KOTAK_NEO_NAPI_URL,
-  KOTAK_NEO_GW_NAPI_URL,
-} = process.env;
-
-const A_DAY_IN_SECONDS = 86400;
+const { KOTAK_NEO_GW_NAPI_URL } = process.env;
 
 function KotakNeoService() {
   BaseService.call(this);
@@ -30,45 +18,6 @@ function KotakNeoService() {
 
     throw new KotakNeoApiError(errorMessage || error.message, status, details);
   };
-
-  this.generateAccessToken = async () => {
-    try {
-      this.accessToken = await redisService.cache(
-        REDIS.KOTAK_NEO.ACCESS_TOKEN,
-        async () => {
-          const consumerAuthToken = CryptoJS.enc.Base64.stringify(
-            CryptoJS.enc.Utf8.parse(
-              `${KOTAK_NEO_CONSUMER_KEY}:${KOTAK_NEO_CONSUMER_SECRET}`
-            )
-          );
-
-          const body = {
-            grant_type: "password",
-            username: KOTAK_NEO_USERNAME,
-            password: KOTAK_NEO_PASSWORD,
-          };
-
-          const response = await this.callApi("POST", "/oauth2/token", body, {
-            headers: { Authorization: `Basic ${consumerAuthToken}` },
-            baseUrl: KOTAK_NEO_NAPI_URL,
-          });
-
-          return response.access_token;
-        },
-        A_DAY_IN_SECONDS
-      );
-
-      this.defaultHeaders = { Authorization: `Bearer ${this.accessToken}` };
-    } catch (error) {
-      logger.error(error);
-      setTimeout(
-        () => appEvents.emit(EVENT.KOTAK_NEO.ACCESS_TOKEN_EXPIRED),
-        3000
-      );
-    }
-  };
-
-  appEvents.on(EVENT.KOTAK_NEO.ACCESS_TOKEN_EXPIRED, this.generateAccessToken);
 
   this.generateViewToken = async (mobileNumber, password) => {
     const body = { mobileNumber, password };
@@ -115,6 +64,19 @@ function KotakNeoService() {
 
     const { token, hsServerId } = data || {};
     return { sessionToken: token, serverId: hsServerId, userId };
+  };
+
+  // Overriding callApi function from BaseService.
+  const parentCallApi = this.callApi;
+  this.callApi = async (...args) => {
+    const accessToken = await redisService.get(REDIS.KOTAK_NEO.ACCESS_TOKEN);
+    if (!accessToken) {
+      throw new KotakNeoApiError("Access token is not set", 401);
+    }
+
+    this.defaultHeaders = { Authorization: `Bearer ${accessToken}` };
+
+    return await parentCallApi(...args);
   };
 
   this.getUserId = (viewToken) => {
