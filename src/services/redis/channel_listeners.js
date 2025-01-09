@@ -5,7 +5,7 @@ const { EVENT, REDIS } = require("@constants");
 const keyExpiryListenerMappings = {
   [`^userId\/[\\w-]+$`]: (key) => {
     const [, userId] = key.split("/");
-    return appEvents.emit(EVENT.APP.USER_SESSION_EXPIRED, userId);
+    return appEvents.emit(EVENT.APP.USER_SESSION.EXPIRED, userId);
   },
 
   default: (key) => logger.warning("Redis: Unhandled key expiry event", key),

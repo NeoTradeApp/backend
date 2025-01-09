@@ -8,7 +8,7 @@ const { EVENT, WEB_SOCKET } = require("@constants");
 const HEALTHCHECK_INTERVAL = 30000;
 
 function SocketService() {
-  this.clients = new Map([]);
+  this.clients = new Map();
 
   this.start = (server) => {
     this.socketServer = new WebSocketServer({ server });
@@ -48,8 +48,9 @@ function SocketService() {
 
     this.healthCheck = setInterval(() => {
       this.socketServer &&
-        this.clients.forEach((ws) => {
+        this.clients.forEach((ws, userId) => {
           if (ws.isAlive === false) {
+            this.clients.delete(userId);
             return ws.terminate();
           }
 
@@ -62,7 +63,13 @@ function SocketService() {
   const authenticateUser = (req, callback) => {
     try {
       const cookie = req.headers.cookie || "";
-      const [, authToken] = cookie.match(/auth-token=([^;]+)/) || [];
+      // const [, authToken] = cookie.match(/[^;]auth-token=([^;]+)/) || [];
+
+      const cookies = cookie.split(";").map((_) => _.trim());
+      const match =
+        cookies.find((cookie) => /^auth-token=(.+)$/.test(cookie)) || "";
+      const [, authToken] = match.split("=") || [];
+
       const userId = authService.verifyToken(authToken);
 
       callback(null, { userId });
@@ -96,7 +103,7 @@ function SocketService() {
     this.broadcast(WEB_SOCKET.MESSAGE_TYPE.MARKET_FEED, data)
   );
 
-  appEvents.on(EVENT.APP.USER_SESSION_EXPIRED, (userId, type, data) => {
+  appEvents.on(EVENT.APP.USER_SESSION.EXPIRED, (userId) => {
     const client = this.clients.get(userId);
     this.send(client, type, data);
   });

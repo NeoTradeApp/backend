@@ -69,7 +69,7 @@ function KotakNeoService() {
   // Overriding callApi function from BaseService.
   const parentCallApi = this.callApi;
   this.callApi = async (...args) => {
-    const accessToken = await redisService.get(REDIS.KOTAK_NEO.ACCESS_TOKEN);
+    const accessToken = await redisService.get(REDIS.KEY.KOTAK_NEO.ACCESS_TOKEN);
     if (!accessToken) {
       throw new KotakNeoApiError("Access token is not set", 401);
     }

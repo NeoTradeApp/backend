@@ -70,7 +70,7 @@ function AuthController(...args) {
     );
 
     redisService.cache(
-      REDIS.HS_WEB_SOCKET.CREDENTIALS,
+      REDIS.KEY.HS_WEB_SOCKET.CREDENTIALS,
       () => ({
         token: sessionToken,
         sid,
