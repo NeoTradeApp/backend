@@ -5,7 +5,7 @@ function BaseRoutes(router) {
     return this.router;
   };
 
-  this.useMiddleware = false;
+  this.useMiddleware = null;
 
   this.use = (...args) => mapRoute(this.router.use, ...args);
 
