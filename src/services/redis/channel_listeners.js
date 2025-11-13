@@ -22,10 +22,15 @@ const marketFeedListeners = (data) =>
 
 // const keySetListeners = (key, value) => {};
 
+const backtestMessageListener = (data) => {
+  appEvents.emit(EVENT.REDIS.BACKTEST.UPDATE, JSON.parse(data));
+}
+
 module.exports = {
   redisChannelListeners: {
     [REDIS.CHANNEL.KEY_EXPIRY]: keyExpiryListener,
     [REDIS.CHANNEL.MARKET_FEED]: marketFeedListeners,
     // [REDIS.CHANNEL.KEY_SET]: keySetListeners,
+    [REDIS.CHANNEL.BACKTEST]: backtestMessageListener,
   },
 };

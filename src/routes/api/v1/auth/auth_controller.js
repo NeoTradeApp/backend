@@ -4,7 +4,7 @@ const { ApplicationError } = require("@error_handlers");
 const { validateLoginParams } = require("./validations");
 const { REDIS } = require("@constants");
 
-const { AUTH_TOKEN_EXPIRES_IN_MINUTES } = process.env;
+const { AUTH_TOKEN_EXPIRES_IN_MINUTES, SERVER_ID } = process.env;
 const TEN_MINUTES_IN_SECONDS = 600;
 const A_DAY_IN_SECONDS = 86400;
 
@@ -55,15 +55,16 @@ function AuthController(...args) {
       throw new ApplicationError("Invalid session", 401);
     }
 
-    const { sessionToken, serverId, userId } =
+    const { sessionToken, hsServerId, userId } =
       await kotakNeoService.getSessionToken(sid, viewToken, otp);
 
     const expiryTimeInSeconds = AUTH_TOKEN_EXPIRES_IN_MINUTES * 60;
     redisService.set(
       `userId/${userId}`,
       {
+        serverId: SERVER_ID,
         sessionToken,
-        serverId,
+        hsServerId,
         sid,
       },
       expiryTimeInSeconds

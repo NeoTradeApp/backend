@@ -84,15 +84,21 @@ function SocketService() {
   };
 
   this.isOpen = (client) => client && client.readyState === WebSocket.OPEN;
-  this.send = (client, type, data) => {
+
+  const sendToClient = (client, type, data) => {
     if (this.isOpen(client)) {
       client.send(JSON.stringify({ type, data }));
     }
   };
 
+  this.send = (userId, type, data) => {
+    const client = this.clients.get(userId);
+    return sendToClient(client, type, data);
+  };
+
   this.broadcast = (type, data) => {
     this.socketServer &&
-      this.clients.forEach((client) => this.send(client, type, data));
+      this.clients.forEach((client) => sendToClient(client, type, data));
   };
 
   this.errorHandler = (error) => {
@@ -104,8 +110,12 @@ function SocketService() {
   );
 
   appEvents.on(EVENT.APP.USER_SESSION.EXPIRED, (userId) => {
-    const client = this.clients.get(userId);
-    this.send(client, type, data);
+    this.send(userId, WEB_SOCKET.MESSAGE_TYPE.USER_SESSION.EXPIRED);
+  });
+
+  appEvents.on(EVENT.REDIS.BACKTEST.UPDATE, (data) => {
+    const { userId } = data;
+    this.send(userId, WEB_SOCKET.MESSAGE_TYPE.BACKTEST.UPDATE, data);
   });
 }
 

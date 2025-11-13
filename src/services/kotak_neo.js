@@ -63,7 +63,7 @@ function KotakNeoService() {
     );
 
     const { token, hsServerId } = data || {};
-    return { sessionToken: token, serverId: hsServerId, userId };
+    return { sessionToken: token, hsServerId, userId };
   };
 
   // Overriding callApi function from BaseService.

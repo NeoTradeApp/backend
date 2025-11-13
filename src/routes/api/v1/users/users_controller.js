@@ -5,7 +5,7 @@ function UsersController(...args) {
   BaseController.call(this, ...args);
 
   this.profile = this.withTryCatch(async () => {
-    const profile = selectKeys(this.user, "serverId", "sid", "userId");
+    const profile = selectKeys(this.user, "hsServerId", "sid", "userId");
     const { sessionToken, sid } = this.user;
 
     return this.sendResponse("Employee profile details", profile);

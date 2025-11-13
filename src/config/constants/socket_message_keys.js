@@ -3,6 +3,10 @@ const MESSAGE_TYPE = {
     EXPIRED: "USER_SESSION/EXPIRED",
   },
   MARKET_FEED: "MARKET_FEED",
+  BACKTEST: {
+    INITIATED: "BACKTEST/INITIATED",
+    UPDATE: "BACKTEST/UPDATE",
+  },
 };
 
 module.exports = {
