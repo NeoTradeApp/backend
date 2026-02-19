@@ -4,6 +4,7 @@ const { BaseRoute } = require("@api/base");
 const UsersRoutes = require("./users");
 const BacktestRoutes = require("./backtest");
 const KotakNeoRoutes = require("./kotakneo");
+const KiteRoutes = require("./kite");
 
 function V1Routes() {
   BaseRoute.call(this, express.Router());
@@ -13,6 +14,7 @@ function V1Routes() {
     // this.use("/kite", new KiteRoutes().config());
     this.use("/users", new UsersRoutes().config());
     this.use("/backtest", new BacktestRoutes().config());
+    this.use("/kite", new KiteRoutes().config());
 
     return this.router;
   };
