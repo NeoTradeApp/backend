@@ -1,6 +1,7 @@
 const { BaseController, exportActions } = require("@api/base");
 const { kiteService, redisService, authService } = require("@services");
 const { ApplicationError } = require("@error_handlers");
+const { SERVICE_PROVIDERS } = require("@constants");
 
 const { AUTH_TOKEN_EXPIRES_IN_MINUTES, SERVER_ID } = process.env;
 
@@ -29,7 +30,7 @@ function KiteController(...args) {
       {
         serverId: SERVER_ID,
         accessToken: access_token,
-        provider: "zerodha",
+        serviceProvider: SERVICE_PROVIDERS.KITE,
       },
       expiryTimeInSeconds
     );
