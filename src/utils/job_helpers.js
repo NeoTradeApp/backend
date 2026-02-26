@@ -19,9 +19,10 @@ const parseTimeToSeconds = (timeInStr) => {
   };
   const sum = (arr) => arr.reduce((s, n) => s + n, 0);
 
-  const unitsWithValue = timeInStr.split(" ") || [];
-  const timeInSeconds = unitsWithValue.map((_) => {
-    const [, value, unit] = _.match(/(\d+)([A-Za-z])/) || [];
+  const unitsWithValue = Array.from(timeInStr.matchAll(/(\d+)([A-Za-z])/g)) || [];
+
+  const timeInSeconds = unitsWithValue.map((unitWithValue) => {
+    const [, value, unit] = unitWithValue;
     return value && unit ? (parseFloat(value) * (multiplier[unit] || 1)) : 0;
   });
 

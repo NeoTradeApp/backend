@@ -2,7 +2,7 @@ const { BaseController, exportActions } = require("@api/base");
 const { kotakNeoService, authService, redisService } = require("@services");
 const { ApplicationError } = require("@error_handlers");
 const { validateLoginParams } = require("./validations");
-const { REDIS } = require("@constants");
+const { REDIS, SERVICE_PROVIDERS } = require("@constants");
 
 const { AUTH_TOKEN_EXPIRES_IN_MINUTES, SERVER_ID } = process.env;
 const TEN_MINUTES_IN_SECONDS = 600;
@@ -66,6 +66,7 @@ function AuthController(...args) {
         sessionToken,
         hsServerId,
         sid,
+        serviceProvider: SERVICE_PROVIDERS.KOTAKNEO,
       },
       expiryTimeInSeconds
     );
