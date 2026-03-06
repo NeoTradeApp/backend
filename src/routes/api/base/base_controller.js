@@ -1,6 +1,5 @@
 const { logger } = require("winston");
-
-const AN_HOUR_IN_SECONDS = 600;
+const { parseTimeToSeconds }= require("@utils")
 
 function BaseController(req, res, next) {
   this.headers = req.headers;
@@ -48,8 +47,8 @@ function BaseController(req, res, next) {
     }
   };
 
-  this.setCookies = (cookies, expiryTime = AN_HOUR_IN_SECONDS) => {
-    const maxAge = 1000 * expiryTime;
+  this.setCookies = (cookies, expiryTime = '1h') => {
+    const maxAge = 1000 * parseTimeToSeconds(expiryTime);
     const cookiesOptions = { maxAge, httpOnly: true };
 
     Object.entries(cookies).forEach(([key, value]) =>

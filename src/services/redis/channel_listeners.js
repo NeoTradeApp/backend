@@ -24,7 +24,7 @@ const marketFeedListeners = (data) =>
 
 const backtestMessageListener = (data) => {
   appEvents.emit(EVENT.REDIS.BACKTEST.UPDATE, JSON.parse(data));
-}
+};
 
 module.exports = {
   redisChannelListeners: {

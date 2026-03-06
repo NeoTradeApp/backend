@@ -11,7 +11,7 @@ function V1Routes() {
 
   this.config = () => {
     this.use("/kotakneo", new KotakNeoRoutes().config());
-    this.use("/kite", new KiteRoutes().config());
+    // this.use("/kite", new KiteRoutes().config());
     this.use("/users", new UsersRoutes().config());
     this.use("/backtest", new BacktestRoutes().config());
 

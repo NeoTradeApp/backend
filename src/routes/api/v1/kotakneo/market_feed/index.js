@@ -2,7 +2,6 @@ const express = require("express");
 const { authMiddleware } = require("@api/v1/middlewares");
 const { BaseRoute } = require("@api/base");
 const MarketFeedController = require("./market_feed_controller");
-const { authMiddleware } = require("../middlewares/authentication");
 
 function MarketFeedRoutes() {
   BaseRoute.call(this, express.Router());

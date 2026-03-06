@@ -1,7 +1,7 @@
 const express = require("express");
 
 const { routesLoggerMiddleware } = require("./routes_logger_middleware");
-const { authRoutes } = require("./auth_routes");
+const AuthRoutes= require("./auth_routes");
 const ApiRoutes = require("./api");
 
 function AppRoutes(app) {
@@ -14,7 +14,7 @@ function AppRoutes(app) {
         res.status(200).send("Server is up and running")
       )
       .use(routesLoggerMiddleware)
-      .use("/auth", authRoutes)
+      .use("/auth", new AuthRoutes().config())
       .use("/api", new ApiRoutes().config());
 
     this.app.use("/", this.router);

@@ -1,9 +1,9 @@
 const { ApplicationError } = require("@error_handlers");
 
-const validateLoginParams = ({ mobileNumber, password }) => {
-  if (!mobileNumber || !password) {
+const validateLoginParams = ({ mobileNumber, ucc, totp }) => {
+  if (!mobileNumber || !ucc || !totp) {
     throw new ApplicationError(
-      "Missing parameters mobile number or password",
+      "Missing parameters mobile number, unique client code or TOTP",
       400
     );
   }

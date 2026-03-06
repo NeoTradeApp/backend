@@ -1,11 +1,14 @@
-function KiteApiError(message, status, details = {}) {
-  Error.call(this);
-  this.message = message;
-  this.status = status;
-  this.details = details;
-}
+class KiteApiError extends Error {
+  constructor(message, status, details) {
+    super(message);
 
-KiteApiError.prototype = Object.create(Error.prototype);
-KiteApiError.prototype.constructor = KiteApiError;
+    Object.assign(this, {
+      name: "KiteApiError",
+      message,
+      status,
+      details,
+    });
+  }
+}
 
 module.exports = KiteApiError;

@@ -3,7 +3,7 @@ const { kiteService, redisService, authService } = require("@services");
 const { ApplicationError } = require("@error_handlers");
 const { SERVICE_PROVIDERS } = require("@constants");
 
-const { AUTH_TOKEN_EXPIRES_IN_MINUTES, SERVER_ID } = process.env;
+const { AUTH_TOKEN_EXPIRY_TIME, SERVER_ID } = process.env;
 
 function KiteController(...args) {
   BaseController.call(this, ...args);
@@ -22,7 +22,7 @@ function KiteController(...args) {
     const sessionData = await kiteService.generateSession(requestToken);
     const { access_token, user_id } = sessionData;
 
-    const expiryTimeInSeconds = (AUTH_TOKEN_EXPIRES_IN_MINUTES || 600) * 60;
+    const authTokenExpiryTime = AUTH_TOKEN_EXPIRY_TIME || "1h";
 
     // Store Kite specific session data in Redis
     await redisService.set(
@@ -32,11 +32,11 @@ function KiteController(...args) {
         accessToken: access_token,
         serviceProvider: SERVICE_PROVIDERS.KITE,
       },
-      expiryTimeInSeconds
+      authTokenExpiryTime
     );
 
     const authToken = authService.signToken(user_id);
-    this.setCookies({ "auth-token": authToken }, expiryTimeInSeconds);
+    this.setCookies({ "auth-token": authToken }, authTokenExpiryTime);
 
     this.sendResponse({ message: "Logged in successfully with Zerodha", sessionData });
   });

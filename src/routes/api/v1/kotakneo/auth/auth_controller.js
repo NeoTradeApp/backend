@@ -4,50 +4,40 @@ const { ApplicationError } = require("@error_handlers");
 const { validateLoginParams } = require("./validations");
 const { REDIS, SERVICE_PROVIDERS } = require("@constants");
 
-const { AUTH_TOKEN_EXPIRES_IN_MINUTES, SERVER_ID } = process.env;
-const TEN_MINUTES_IN_SECONDS = 600;
-const A_DAY_IN_SECONDS = 86400;
+const { AUTH_TOKEN_EXPIRY_TIME, SERVER_ID } = process.env;
 
 function AuthController(...args) {
   BaseController.call(this, ...args);
 
   this.login = this.withTryCatch(async () => {
-    const { mobileNumber, password } = this.body;
-    validateLoginParams({ mobileNumber, password });
+    const { mobileNumber, ucc, totp } = this.body;
+    validateLoginParams({ mobileNumber, ucc, totp });
 
     const { sid, viewToken } = await kotakNeoService.generateViewToken(
       mobileNumber,
-      password
+      ucc,
+      totp
     );
 
-    await kotakNeoService.generateOtp(viewToken);
+    this.setCookies({ "view-token": viewToken, sid }, "10m");
 
-    this.setCookies({ "view-token": viewToken, sid }, TEN_MINUTES_IN_SECONDS);
-
-    this.sendResponse("OTP sent to the mobile number.");
+    this.sendResponse("TOTP is authenticated.");
   });
 
-  this.validateOtpSession = this.withTryCatch(async () => {
+  this.validateMpinSession = this.withTryCatch(async () => {
     const { "view-token": viewToken } = this.cookies;
     if (!viewToken) {
-      throw new ApplicationError("Invalid OTP session", 401);
+      throw new ApplicationError("Invalid MPIN session", 401);
     }
 
     kotakNeoService.getUserId(viewToken);
-    this.sendResponse("Valid OTP session");
+    this.sendResponse("Valid MPIN session");
   });
 
-  this.resendOtp = this.withTryCatch(async () => {
-    const { "view-token": viewToken } = this.cookies;
-    await kotakNeoService.generateOtp(viewToken);
-
-    this.sendResponse("OTP resent to the mobile number.");
-  });
-
-  this.validateOtp = this.withTryCatch(async () => {
-    const { otp } = this.body;
-    if (!otp) {
-      throw new ApplicationError("Missing otp", 400);
+  this.validateMpin = this.withTryCatch(async () => {
+    const { mpin } = this.body;
+    if (!mpin) {
+      throw new ApplicationError("Missing MPIN", 400);
     }
 
     const { "view-token": viewToken, sid } = this.cookies;
@@ -55,20 +45,21 @@ function AuthController(...args) {
       throw new ApplicationError("Invalid session", 401);
     }
 
-    const { sessionToken, hsServerId, userId } =
-      await kotakNeoService.getSessionToken(sid, viewToken, otp);
+    const { sessionToken, baseUrl, userId } =
+      await kotakNeoService.getSessionToken(sid, viewToken, mpin);
 
-    const expiryTimeInSeconds = AUTH_TOKEN_EXPIRES_IN_MINUTES * 60;
+    const authTokenExpiryTime = AUTH_TOKEN_EXPIRY_TIME || "1h";
+
     redisService.set(
       `userId/${userId}`,
       {
         serverId: SERVER_ID,
         sessionToken,
-        hsServerId,
+        tradeApiBaseUrl: baseUrl,
         sid,
         serviceProvider: SERVICE_PROVIDERS.KOTAKNEO,
       },
-      expiryTimeInSeconds
+      authTokenExpiryTime
     );
 
     redisService.cache(
@@ -77,12 +68,12 @@ function AuthController(...args) {
         token: sessionToken,
         sid,
       }),
-      A_DAY_IN_SECONDS
+      "1d"
     );
 
     const authToken = authService.signToken(userId);
     this.clearCookies(["view-token", "sid"]);
-    this.setCookies({ "auth-token": authToken }, expiryTimeInSeconds);
+    this.setCookies({ "auth-token": authToken }, authTokenExpiryTime);
 
     this.sendResponse("Logged in successfully.");
   });

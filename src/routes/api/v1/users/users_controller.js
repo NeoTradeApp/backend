@@ -5,10 +5,9 @@ function UsersController(...args) {
   BaseController.call(this, ...args);
 
   this.profile = this.withTryCatch(async () => {
-    const profile = selectKeys(this.user, "hsServerId", "sid", "userId");
-    const { sessionToken, sid } = this.user;
+    const profile = selectKeys(this.user, "userId", "tradeApiBaseUrl", "serviceProvider", "serverId");
 
-    return this.sendResponse("Employee profile details", profile);
+    return this.sendResponse("User profile details", profile);
   });
 }
 

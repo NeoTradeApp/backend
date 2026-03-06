@@ -2,7 +2,6 @@ const { BaseController, exportActions } = require("@api/base");
 const { generateRandomId } = require("@utils");
 const { redisService } = require("@services");
 
-const ONE_HOUR_IN_SECONDS = 3600;
 const { SERVER_ID } = process.env;
 
 function BacktestController(...args) {
@@ -19,7 +18,7 @@ function BacktestController(...args) {
         status: "started",
         params: this.body,
       }),
-      ONE_HOUR_IN_SECONDS
+      "1h"
     );
 
     this.sendResponse("Backtesting started", { backtestJobId });

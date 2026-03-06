@@ -2,19 +2,20 @@ const JWT = require("jsonwebtoken");
 const crypto = require("crypto");
 const moment = require("moment");
 const CryptoJS = require("crypto-js");
+const { parseTimeToSeconds } = require("@utils");
 
 const {
   SIGN_AUTH_TOKEN_SECRET,
   AUTH_PAYLOAD_ENCRYPTION_SECRET,
-  AUTH_TOKEN_EXPIRES_IN_MINUTES,
+  AUTH_TOKEN_EXPIRY_TIME,
 } = process.env;
 
 function AuthService() {
   this.signToken = (payload) => {
     const nonce = crypto.randomBytes(16).toString("base64");
     const expires = moment().add(
-      AUTH_TOKEN_EXPIRES_IN_MINUTES || "600",
-      "minutes"
+      parseTimeToSeconds(AUTH_TOKEN_EXPIRY_TIME || "10h"),
+      "seconds"
     );
 
     const jwtPayload = {
