@@ -1,5 +1,5 @@
 const { logger } = require("winston");
-const { parseTimeToSeconds }= require("@utils")
+const { parseTimeToSeconds } = require("@utils")
 
 function BaseController(req, res, next) {
   this.headers = req.headers;
@@ -20,6 +20,21 @@ function BaseController(req, res, next) {
     } catch (error) {
       this.errorHandler(error);
     }
+  };
+
+  this.startStreaming = () => {
+    this.res.setHeader("Content-Type", "application/json");
+    this.res.setHeader("Transfer-Encoding", "chunked");
+    this.res.setHeader("Cache-Control", "no-cache");
+    this.res.setHeader("Connection", "keep-alive");
+  };
+
+  this.writeToStream = (chunk) => {
+    this.res.write(JSON.stringify(chunk) + "\n");
+  };
+
+  this.endStreaming = () => {
+    this.res.end();
   };
 
   this.permittedField = (params, ...fields) =>

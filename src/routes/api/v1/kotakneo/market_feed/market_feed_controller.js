@@ -9,8 +9,6 @@ function MarketFeedController(...args) {
   this.getOptionsChain = this.withTryCatch(async () => {
     const { exchange, ...filter } = this.query;
 
-
-
     const instruments = await redisService.get(REDIS.KEY.KOTAK_NEO.MASTER_SCRIP(exchange)) || [];
     // const optionsChain = await kotakNeoService.getOptionsChain(underlying, expiry, this.user);
     this.sendResponse(

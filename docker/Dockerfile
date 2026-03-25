@@ -9,4 +9,6 @@ COPY ./ /usr/src/app/
 # Install app dependencies
 RUN npm install --production
 
+RUN npx sequelize-cli db:migrate
+
 CMD ["npm", "start"]
