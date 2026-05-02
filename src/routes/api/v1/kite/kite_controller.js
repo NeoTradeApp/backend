@@ -1,7 +1,7 @@
 const { BaseController, exportActions } = require("@api/base");
 const { kiteService, redisService, authService } = require("@services");
 const { ApplicationError } = require("@error_handlers");
-const { SERVICE_PROVIDERS } = require("@constants");
+const { REDIS, SERVICE_PROVIDERS } = require("@constants");
 
 const { AUTH_TOKEN_EXPIRY_TIME, SERVER_ID } = process.env;
 
@@ -26,7 +26,8 @@ function KiteController(...args) {
 
     // Store Kite specific session data in Redis
     await redisService.set(
-      `userId/${user_id}`,
+      // `userId/${user_id}`,
+      REDIS.KEY.USER_INFO(userId),
       {
         serverId: SERVER_ID,
         accessToken: access_token,

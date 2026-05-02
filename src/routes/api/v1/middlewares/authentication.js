@@ -1,11 +1,12 @@
 const { authService, redisService } = require("@services");
+const { REDIS } = require("@constants");
 
 const authMiddleware = async (req, res, next) => {
   try {
     const authToken = req.cookies["auth-token"];
     const userId = authService.verifyToken(authToken);
 
-    let user = await redisService.get(`userId/${userId}`);
+    let user = await redisService.get(REDIS.KEY.USER_INFO(userId));
     if (!user) {
       throw 401;
     }

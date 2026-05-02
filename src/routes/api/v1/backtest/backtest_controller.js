@@ -1,6 +1,7 @@
 const { BaseController, exportActions } = require("@api/base");
 const { generateRandomId } = require("@utils");
 const { redisService } = require("@services");
+const { REDIS } = require("@constants");
 
 const { SERVER_ID } = process.env;
 
@@ -11,7 +12,7 @@ function BacktestController(...args) {
     const { userId } = this.user;
     const backtestJobId = generateRandomId(7);
     redisService.cache(
-      `backtest/${backtestJobId}`,
+      REDIS.KEY.BACKTEST(backtestJobId),
       () => ({
         userId,
         serverId: SERVER_ID,

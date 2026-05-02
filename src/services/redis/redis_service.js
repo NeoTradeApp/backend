@@ -41,9 +41,9 @@ function RedisService() {
   };
 
   this.set = (cacheKey, data, expiryTimeInString) =>
-    this.cacheClient.set(cacheKey, JSON.stringify(data), {
+    this.cacheClient.set(cacheKey, JSON.stringify(data), expiryTimeInString ? ({
       EX: parseTimeToSeconds(expiryTimeInString),
-    });
+    }) : undefined);
 
   this.delete = (cacheKey) => this.cacheClient.del(cacheKey);
 

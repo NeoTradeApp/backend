@@ -51,7 +51,8 @@ function AuthController(...args) {
     const authTokenExpiryTime = AUTH_TOKEN_EXPIRY_TIME || "1h";
 
     redisService.set(
-      `userId/${userId}`,
+      // `userId/${userId}`,
+      REDIS.KEY.USER_INFO(userId),
       {
         serverId: SERVER_ID,
         sessionToken,
@@ -68,6 +69,12 @@ function AuthController(...args) {
         token: sessionToken,
         sid,
       }),
+      "1d"
+    );
+
+    redisService.cache(
+      REDIS.KEY.KOTAK_NEO.TRADE_BASE_URL,
+      () => baseUrl,
       "1d"
     );
 

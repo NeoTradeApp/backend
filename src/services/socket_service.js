@@ -117,6 +117,11 @@ function SocketService() {
     const { userId } = data;
     this.send(userId, WEB_SOCKET.MESSAGE_TYPE.BACKTEST.UPDATE, data);
   });
+
+  appEvents.on(EVENT.REDIS.POSITION.UPDATE, (data) => {
+    const { userId, position } = data;
+    this.send(userId, WEB_SOCKET.MESSAGE_TYPE.POSITION.UPDATE(position.id), position);
+  });
 }
 
 module.exports = { socketService: new SocketService() };

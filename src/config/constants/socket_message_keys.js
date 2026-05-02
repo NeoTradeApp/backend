@@ -7,6 +7,9 @@ const MESSAGE_TYPE = {
     INITIATED: "BACKTEST/INITIATED",
     UPDATE: "BACKTEST/UPDATE",
   },
+  POSITION: {
+    UPDATE: (positionId) => `POSITION/UPDATE/${positionId}`,
+  },
 };
 
 module.exports = {

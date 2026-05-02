@@ -4,10 +4,14 @@ const KEY = {
   KOTAK_NEO: {
     ACCESS_TOKEN: "REDIS/KEY/KOTAK_NEO/ACCESS_TOKEN",
     MASTER_SCRIP: (exchange) => `REDIS/KEY/KOTAK_NEO/MASTER_SCRIP/${exchange}`,
+    TRADE_BASE_URL: "REDIS/KEY/KOTAK_NEO/TRADE_BASE_URL",
   },
   HS_WEB_SOCKET: {
     CREDENTIALS: "REDIS/KEY/HS_WEB_SOCKET/CREDENTIALS",
   },
+  USER_INFO: (userId) => `REDIS/KEY/USER_INFO/${userId}`,
+  BACKTEST: (backtestJobId) => `REDIS/KEY/BACKTEST/${backtestJobId}`,
+  STRATEGY: (strategyName, strategyId) => `REDIS/KEY/STRATEGY/${strategyName}/${strategyId}`,
 };
 
 const databaseIndex = 0;
@@ -17,6 +21,7 @@ const CHANNEL = {
   MARKET_FEED: "REDIS/CHANNEL/MARKET_FEED",
 
   BACKTEST: `REDIS/CHANNEL/BACKTEST/${SERVER_ID}`,
+  POSITION_UPDATE: `REDIS/CHANNEL/POSITION_UPDATE/${SERVER_ID}`,
 };
 
 module.exports = {
