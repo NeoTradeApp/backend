@@ -1,6 +1,7 @@
+const { Op } = require("sequelize");
 const { Strategy, Position, Order } = require("@models");
 const { BaseController, exportActions } = require("@api/base");
-const { generateRandomId } = require("@utils");
+const { generateRandomId, startOfDay, endOfDay } = require("@utils");
 const { redisService } = require("@services");
 const { REDIS } = require("@constants");
 
@@ -10,12 +11,22 @@ function StrategiesController(...args) {
   BaseController.call(this, ...args);
 
   this.list = this.withTryCatch(async () => {
+    const { date } = this.query;
+
     const strategies = await Strategy.findAll({
       where: { userId: this.user.userId },
+
       include: [
         {
           model: Position,
+
+          where: {
+            createdAt: {
+              [Op.between]: [startOfDay(date).toDate(), endOfDay(date).toDate()],
+            },
+          },
           include: [Order],
+          required: false,
         },
       ],
     });

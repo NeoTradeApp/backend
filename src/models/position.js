@@ -14,6 +14,11 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
 
+  const parseDecimal = (field) => function () {
+    const value = this.getDataValue(field);
+    return value === null ? null : parseFloat(value);
+  };
+
   Position.init(
     {
       id: {
@@ -30,6 +35,13 @@ module.exports = (sequelize, DataTypes) => {
       pnl: {
         type: DataTypes.DECIMAL(12, 2),
         defaultValue: 0,
+        get: parseDecimal("pnl"),
+      },
+
+      netPnl: {
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0,
+        get: parseDecimal("netPnl"),
       },
 
       status: {
@@ -39,16 +51,38 @@ module.exports = (sequelize, DataTypes) => {
       name: DataTypes.STRING,
       description: DataTypes.STRING,
 
-      entry_price: DataTypes.DECIMAL(12, 2),
-      exit_price: DataTypes.DECIMAL(12, 2),
+      entryPrice: {
+        type: DataTypes.DECIMAL(12, 2),
+        get: parseDecimal("entryPrice"),
+      },
 
-      entry_time: DataTypes.DATE,
-      exit_time: DataTypes.DATE,
+      exitPrice: {
+        type: DataTypes.DECIMAL(12, 2),
+        get: parseDecimal("exitPrice"),
+      },
 
-      target: DataTypes.DECIMAL(12, 2),
-      stoploss: DataTypes.DECIMAL(12, 2),
-      trailing_stoploss: DataTypes.DECIMAL(12, 2),
-      trail_stoploss_at: DataTypes.DECIMAL(12, 2),
+      entryTime: DataTypes.DATE,
+      exitTime: DataTypes.DATE,
+
+      target: {
+        type: DataTypes.DECIMAL(12, 2),
+        get: parseDecimal("target"),
+      },
+
+      stoploss: {
+        type: DataTypes.DECIMAL(12, 2),
+        get: parseDecimal("stoploss"),
+      },
+
+      trailingStoploss: {
+        type: DataTypes.DECIMAL(12, 2),
+        get: parseDecimal("trailingStoploss"),
+      },
+
+      trailStoplossAt: {
+        type: DataTypes.DECIMAL(12, 2),
+        get: parseDecimal("trailStoplossAt"),
+      },
     },
     {
       sequelize,

@@ -12,6 +12,12 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
+
+  const parseDecimal = (field) => function () {
+    const value = this.getDataValue(field);
+    return value === null ? null : parseFloat(value);
+  };
+
   Order.init(
     {
       id: {
@@ -38,9 +44,18 @@ module.exports = (sequelize, DataTypes) => {
       quantity: DataTypes.INTEGER,
       filledQuantity: DataTypes.INTEGER,
 
-      price: DataTypes.DECIMAL,
-      brokerage: DataTypes.DECIMAL,
-      taxes: DataTypes.DECIMAL,
+      price: {
+        type: DataTypes.DECIMAL,
+        get: parseDecimal("price"),
+      },
+      brokerage: {
+        type: DataTypes.DECIMAL,
+        get: parseDecimal("brokerage"),
+      },
+      taxes: {
+        type: DataTypes.DECIMAL,
+        get: parseDecimal("taxes"),
+      },
 
       productType: DataTypes.ENUM("MIS", "NRML"),
       orderType: DataTypes.ENUM("LIMIT", "MARKET", "SL-LMT", "SL-MKT"),
