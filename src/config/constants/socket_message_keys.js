@@ -8,7 +8,8 @@ const MESSAGE_TYPE = {
     UPDATE: "BACKTEST/UPDATE",
   },
   POSITION: {
-    UPDATE: (positionId) => `POSITION/UPDATE/${positionId}`,
+    NEW: (strategyId) => `STRATEGY/${strategyId}/POSITION/NEW`,
+    UPDATE: (strategyId, positionId) => `STRATEGY/${strategyId}/POSITION/${positionId}/UPDATE`,
   },
 };
 

@@ -120,7 +120,12 @@ function SocketService() {
 
   appEvents.on(EVENT.REDIS.POSITION.UPDATE, (data) => {
     const { userId, position } = data;
-    this.send(userId, WEB_SOCKET.MESSAGE_TYPE.POSITION.UPDATE(position.id), position);
+    this.send(userId, WEB_SOCKET.MESSAGE_TYPE.POSITION.UPDATE(position.strategyId, position.id), position);
+  });
+
+  appEvents.on(EVENT.REDIS.POSITION.NEW, (data) => {
+    const { userId, position } = data;
+    this.send(userId, WEB_SOCKET.MESSAGE_TYPE.POSITION.NEW(position.strategyId), position);
   });
 }
 

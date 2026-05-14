@@ -41,12 +41,17 @@ const tradePositionUpdateListener = (data) => {
   appEvents.emit(EVENT.REDIS.POSITION.UPDATE, JSON.parse((data)));
 };
 
+const tradePositionNewListener = (data) => {
+  appEvents.emit(EVENT.REDIS.POSITION.NEW, JSON.parse((data)));
+}
+
 module.exports = {
   redisChannelListeners: {
     [REDIS.CHANNEL.KEY_EXPIRY]: keyListener(keyExpiryListenerMappings, unhandledKeyExpiryWarning),
     [REDIS.CHANNEL.MARKET_FEED]: marketFeedListeners,
     // [REDIS.CHANNEL.KEY_SET]: keyListener,
     [REDIS.CHANNEL.BACKTEST]: backtestMessageListener,
-    [REDIS.CHANNEL.POSITION_UPDATE]: tradePositionUpdateListener,
+    [REDIS.CHANNEL.POSITION.UPDATE]: tradePositionUpdateListener,
+    [REDIS.CHANNEL.POSITION.NEW]: tradePositionNewListener,
   },
 };

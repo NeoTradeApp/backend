@@ -19,13 +19,17 @@ function StrategiesController(...args) {
       include: [
         {
           model: Position,
+          as: "positions",
 
           where: {
             createdAt: {
               [Op.between]: [startOfDay(date).toDate(), endOfDay(date).toDate()],
             },
           },
-          include: [Order],
+          include: [{
+            model: Order,
+            as: "orders",
+          }],
           required: false,
         },
       ],
