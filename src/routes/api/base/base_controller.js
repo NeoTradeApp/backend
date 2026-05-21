@@ -43,6 +43,12 @@ function BaseController(req, res, next) {
       {}
     );
 
+  this.sendNotFound = (message, data = {}) =>
+    this.res.status(404).send({
+      message,
+      data,
+    });
+
   this.sendResponse = (message, data = {}) =>
     this.res.status(200).send({
       message,

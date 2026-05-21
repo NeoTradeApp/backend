@@ -43,7 +43,7 @@ const tradePositionUpdateListener = (data) => {
 
 const tradePositionNewListener = (data) => {
   appEvents.emit(EVENT.REDIS.POSITION.NEW, JSON.parse((data)));
-}
+};
 
 module.exports = {
   redisChannelListeners: {

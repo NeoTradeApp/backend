@@ -11,6 +11,8 @@ function StrategiesRoutes() {
   const parentConfig = this.config;
   this.config = () => {
     this.get("/", StrategiesController.action("list"));
+    this.get("/:strategyId", StrategiesController.action("show"));
+    this.get("/:strategyId/pnl-day-wise", StrategiesController.action("pnlDayWise"));
     this.post("/:strategyName", StrategiesController.action("executeStrategy"));
 
     return parentConfig();

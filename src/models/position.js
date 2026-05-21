@@ -1,5 +1,5 @@
 // models/position.js
-const { Model } = require("sequelize");
+const { Model, QueryTypes } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
   class Position extends Model {
@@ -13,6 +13,62 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "positionId",
         as: "orders",
       });
+    }
+
+    static async groupedByDay(strategyId, fromDate, toDate) {
+      return this.sequelize.query(`
+        SELECT
+          DATE(positions.created_at) AS date,
+          sum(pnl) as pnl,
+          strategies.strategy_name as "strategyName",
+          json_agg(
+            json_build_object(
+              'id', positions.id,
+              'name', positions.name,
+              'strategyId', positions.strategy_id,
+              'pnl', positions.pnl,
+              'status', positions.status,
+              'entryTime', positions.entry_time,
+              'exitTime', positions.exit_time,
+              'createdAt', positions.created_at,
+              'orders', (
+                SELECT json_agg(
+                  json_build_object(
+                    'id', orders.id,
+                    'name', orders.name,
+                    'price', orders.price,
+                    'quantity', orders.quantity,
+                    'tnxType', orders.tnx_type,
+                    'brokerage', brokerage,
+                    'taxes', taxes,
+                    'parentId', parent_id,
+                    'createdAt', orders.created_at
+                  )
+                  ORDER BY orders.created_at ASC
+                )
+                FROM orders
+                WHERE orders.position_id = positions.id
+              )
+            )
+            ORDER BY positions.created_at ASC
+          ) AS positions
+        FROM positions
+        INNER JOIN strategies ON strategies.id = positions.strategy_id
+        WHERE positions.strategy_id = :strategyId
+          AND DATE(positions.created_at) BETWEEN :fromDate AND :toDate
+        GROUP BY DATE(positions.created_at), strategies.strategy_name
+        ORDER BY date ASC
+      `,
+        {
+          replacements: {
+            strategyId,
+            fromDate,
+            toDate,
+          },
+
+          type: QueryTypes.SELECT,
+        }
+      );
     }
   }
 
