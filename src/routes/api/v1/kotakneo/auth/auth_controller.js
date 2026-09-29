@@ -63,12 +63,21 @@ function AuthController(...args) {
       authTokenExpiryTime
     );
 
-    redisService.cache(
+    // redisService.cache(
+    //   REDIS.KEY.HS_WEB_SOCKET.CREDENTIALS,
+    //   () => ({
+    //     token: sessionToken,
+    //     sid,
+    //   }),
+    //   "1d"
+    // );
+
+    redisService.set(
       REDIS.KEY.HS_WEB_SOCKET.CREDENTIALS,
-      () => ({
+      {
         token: sessionToken,
         sid,
-      }),
+      },
       "1d"
     );
 

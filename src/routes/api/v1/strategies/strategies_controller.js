@@ -13,7 +13,10 @@ function StrategiesController(...args) {
   this.list = this.withTryCatch(async () => {
     const { date, includePositions } = this.query;
 
-    const sqlQuery = { where: { userId: this.user.userId } };
+    const sqlQuery = {
+      where: { userId: this.user.userId },
+      order: [['createdAt', 'DESC']]
+    };
 
     if (includePositions) {
       sqlQuery.include = [
