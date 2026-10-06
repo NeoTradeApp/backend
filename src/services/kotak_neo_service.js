@@ -52,8 +52,8 @@ function KotakNeoService() {
       options
     );
 
-    const { token, baseUrl } = data || {};
-    return { sessionToken: token, baseUrl, userId };
+    const { token, sid: sidFromResponse, baseUrl, feedUrl } = data || {};
+    return { sessionToken: token, sid: sidFromResponse, baseUrl, userId, feedUrl };
   };
 
   // Keep a reference to the original callApi from BaseService

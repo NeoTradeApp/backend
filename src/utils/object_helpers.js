@@ -1,5 +1,12 @@
+// const selectKeys = (obj, ...keys) =>
+//   obj && keys.reduce((result, key) => ({ ...result, [key]: obj[key] }), {});
+
 const selectKeys = (obj, ...keys) =>
-  obj && keys.reduce((result, key) => ({ ...result, [key]: obj[key] }), {});
+  obj && keys.reduce((result, key) => {
+    const [originalKey, alias] = (key.split("as") || []).map(k => k.trim());
+
+    return ({ ...result, [alias || originalKey]: obj[originalKey] })
+  }, {});
 
 const getErrorMessage = (errorObj, ...keys) => {
   const keysToMatch = ["message"].concat(keys);

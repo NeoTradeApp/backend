@@ -19,7 +19,7 @@ function AuthController(...args) {
       totp
     );
 
-    this.setCookies({ "view-token": viewToken, sid }, "10m");
+    this.setCookies({ "view-token": viewToken, sid, ucc }, "10m");
 
     this.sendResponse("TOTP is authenticated.");
   });
@@ -40,50 +40,39 @@ function AuthController(...args) {
       throw new ApplicationError("Missing MPIN", 400);
     }
 
-    const { "view-token": viewToken, sid } = this.cookies;
+    const { "view-token": viewToken, sid, ucc } = this.cookies;
     if (!viewToken || !sid) {
       throw new ApplicationError("Invalid session", 401);
     }
 
-    const { sessionToken, baseUrl, userId } =
+    const { sessionToken, baseUrl, userId, feedUrl, sid: sidFromResponse } =
       await kotakNeoService.getSessionToken(sid, viewToken, mpin);
 
     const authTokenExpiryTime = AUTH_TOKEN_EXPIRY_TIME || "1h";
 
     redisService.set(
-      // `userId/${userId}`,
       REDIS.KEY.USER_INFO(userId),
       {
         serverId: SERVER_ID,
         sessionToken,
+        uniqueClientCode: ucc,
         tradeApiBaseUrl: baseUrl,
-        sid,
+        tradeApiFeedUrl: feedUrl,
+        sid: sidFromResponse || sid,
         serviceProvider: SERVICE_PROVIDERS.KOTAKNEO,
       },
       authTokenExpiryTime
     );
 
-    // redisService.cache(
-    //   REDIS.KEY.HS_WEB_SOCKET.CREDENTIALS,
-    //   () => ({
-    //     token: sessionToken,
-    //     sid,
-    //   }),
-    //   "1d"
-    // );
-
     redisService.set(
       REDIS.KEY.HS_WEB_SOCKET.CREDENTIALS,
       {
         token: sessionToken,
-        sid,
+        sid: sidFromResponse || sid,
+        ucc,
+        baseUrl: baseUrl,
+        feedUrl: feedUrl,
       },
-      "1d"
-    );
-
-    redisService.cache(
-      REDIS.KEY.KOTAK_NEO.TRADE_BASE_URL,
-      () => baseUrl,
       "1d"
     );
 
